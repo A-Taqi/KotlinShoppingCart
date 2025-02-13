@@ -1,0 +1,27 @@
+name: Test Report
+
+on:
+  workflow_run:
+    workflows: ["CI"]   # must match `name: CI` in ci.yml
+    types: [completed]
+
+# These permissions let the workflow create check runs / annotations
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      # Use dorny/test-reporter in the base repo (which has write perms)
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        with:
+          artifact: test-results
+          name: "JUnit Tests"
+          path: '**/*.xml'
+          # The official doc says the correct parser for Gradle JUnit is usually 'junit'
+          reporter: 'java-junit'
+          fail-on-error: true
+          fail-on-empty: true

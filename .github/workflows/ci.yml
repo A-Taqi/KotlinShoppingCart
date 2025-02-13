@@ -1,11 +1,11 @@
-name: Build and Test
+name: CI
 
 on:
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,21 +19,16 @@ jobs:
       - name: Grant execute permission for Gradlew
         run: chmod +x gradlew
 
+      # Run tests with read-only token
       - name: Build and Test with Gradle
-        # 'continue-on-error: true' so we can still parse results if tests fail
         run: ./gradlew clean test --console=plain
+        # If you want to continue on error so artifact is always uploaded:
         continue-on-error: true
 
-      - name: Publish Test Report
-        if: always()  # ensure this step runs even if tests fail
-        uses: dorny/test-reporter@v1
+      # Upload JUnit XML results
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          # This name shows up in the Checks tab
-          name: 'JUnit Tests'
-          # Gradle outputs JUnit XML to build/test-results/test/ by default
+          name: test-results
           path: '**/build/test-results/test/*.xml'
-          # "junit" is the correct reporter for JUnit-style XML
-          reporter: 'java-junit'
-          fail-on-error: true
-          # fail-on-empty: true means fail if no test results are found
-          fail-on-empty: true
